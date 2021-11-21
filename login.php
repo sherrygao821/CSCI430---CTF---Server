@@ -54,7 +54,7 @@
 				dataType: 'json',
 				data: {
 					functionname: 'checkUsername',
-					arguments: [username]
+					arguments: [username, "login"]
 				},
 
 				success: function(obj, textstatus) {
@@ -69,7 +69,7 @@
 								dataType: 'json',
 								data: {
 									functionname: 'getPassword',
-									arguments: [username]
+									arguments: [username, password]
 								},
 
 								success: function(obj, textstatus) {
@@ -78,9 +78,19 @@
 										var storedPass = obj.result;
 										// TODO: switch to hashed password
 										if (storedPass == hashed_pass) {
-											window.location.href = "success.php";
-										}
-										else {
+											jQuery.ajax({
+												type: "GET",
+												url: 'database.php',
+												dataType: 'json',
+												data: {
+													functionname: 'recordData',
+													arguments: ["S"]
+												},
+												success: function(obj, textstatus) {
+													window.location.href = "success.php";
+												}
+											});
+										} else {
 											window.location.href = "failure.php?user=" + username;
 										}
 									} else {

@@ -96,7 +96,18 @@
 											var result = obj.result;
 											console.log(result);
 											if (result) {
-												window.location.href = "success.php";
+												jQuery.ajax({
+													type: "GET",
+													url: 'database.php',
+													dataType: 'json',
+													data: {
+														functionname: 'recordData',
+														arguments: ["S"]
+													},
+													success: function(obj, textstatus) {
+														window.location.href = "success.php";
+													}
+												});
 											} else {
 												window.location.href = "failure.php";
 											}

